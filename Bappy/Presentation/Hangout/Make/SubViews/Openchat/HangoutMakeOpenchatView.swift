@@ -62,6 +62,8 @@ final class HangoutMakeOpenchatView: UIView {
         let label = UILabel()
         label.font = .roboto(size: 14.0)
         label.textColor = .bappyCoral
+        label.numberOfLines = 3
+        label.adjustsFontSizeToFitWidth = true
         label.isHidden = true
         return label
     }()
@@ -91,7 +93,7 @@ final class HangoutMakeOpenchatView: UIView {
     // MARK: Helpers
     private func configure() {
         self.backgroundColor = .white
-        ruleDescriptionLabel.text = "Write the valid URL form"
+        ruleDescriptionLabel.text = "Follow the Openchat guide ➡️\nIf you still can't, write your Kakao ID\nand add \"Text me to my Kakao ID\". "
         scrollView.isScrollEnabled = false
     }
     
@@ -130,14 +132,16 @@ final class HangoutMakeOpenchatView: UIView {
         
         contentView.addSubview(guideButton)
         guideButton.snp.makeConstraints {
-            $0.top.equalTo(underlinedView.snp.bottom).offset(4.0)
+            $0.centerY.equalTo(underlinedView.snp.bottom).offset(17.0)
             $0.trailing.equalTo(underlinedView).offset(-3.0)
+            $0.height.equalTo(44.0)
         }
         
         contentView.addSubview(ruleDescriptionLabel)
         ruleDescriptionLabel.snp.makeConstraints {
             $0.top.equalTo(underlinedView.snp.bottom).offset(10.0)
             $0.leading.equalTo(underlinedView).offset(5.0)
+            $0.trailing.lessThanOrEqualTo(guideButton.snp.leading).offset(-3.0)
         }
     }
 }
@@ -153,6 +157,10 @@ extension HangoutMakeOpenchatView {
             .bind(to: viewModel.input.editingDidBegin)
             .disposed(by: disposeBag)
         
+        guideButton.rx.tap
+            .bind(to: viewModel.input.guideButtonTapped)
+            .disposed(by: disposeBag)
+        
         viewModel.output.shouldHideRule
             .emit(to: ruleDescriptionLabel.rx.isHidden)
             .disposed(by: disposeBag)
@@ -161,6 +169,11 @@ extension HangoutMakeOpenchatView {
             .emit(onNext: { [weak self] height in
                 self?.updateTextFieldPosition(bottomButtonHeight: height)
             })
+            .disposed(by: disposeBag)
+        
+        viewModel.output.openOpenchatGuide
+            .compactMap { $0 }
+            .emit(onNext: { url in UIApplication.shared.open(url) })
             .disposed(by: disposeBag)
     }
 }
